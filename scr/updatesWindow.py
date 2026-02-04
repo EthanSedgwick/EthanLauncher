@@ -37,7 +37,7 @@ class UpdateCheckerDialog(QDialog):
         mods_with_updates = []
         for mod_name, mod_info in self.mod_files.items():
             github_url = mod_info.get('github')
-            current_release = mod_info.get('current_release')
+            version = mod_info.get('version')
             mod_file_path = os.path.join(self.mod_folder, mod_info['file'])
 
             if github_url:
@@ -70,7 +70,7 @@ class UpdateCheckerDialog(QDialog):
                     # Compare release date
                     if latest_release_date:
                         latest_release_date = datetime.strptime(latest_release_date, "%Y-%m-%dT%H:%M:%SZ")
-                        if (latest_release_tag and latest_release_tag != current_release) or latest_release_date>mod_last_modified_date:
+                        if (latest_release_tag and latest_release_tag != version) or latest_release_date>mod_last_modified_date:
                             has_new_release = True
                     
                     # Compare commit date

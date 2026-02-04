@@ -264,7 +264,7 @@ class GameLauncher(QWidget):
                             self.mod_files[name] = {
                                 'file': file,
                                 'github': github if github else None,
-                                'release': version if version else None
+                                'version': version if version else None
                             }
                             self.mod_dependencies[name] = dependencies
                             self.mod_user_dirs[name] = user_dir
