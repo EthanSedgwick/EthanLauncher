@@ -94,7 +94,7 @@ class SettingsManager:
             file.write(default_settings)
 
 from PyQt6.QtWidgets import (
-    QHBoxLayout, QVBoxLayout, QDialog, QFormLayout, QLineEdit, QSlider,
+    QHBoxLayout, QLabel, QVBoxLayout, QDialog, QFormLayout, QLineEdit, QSlider,
     QPushButton, QMessageBox, QCheckBox, QComboBox
 )
 from PyQt6.QtCore import Qt
@@ -208,7 +208,12 @@ class ConfigDialog(QDialog):
         self.update_time_slider.setMinimum(1)
         self.update_time_slider.setMaximum(100)
         self.update_time_slider.setValue(int(float(launcher_config["update_time"])))
-        layout.addRow("Update Time:", self.update_time_slider)
+        self.update_time_slider.toolTip = f"Increases game speed at the cost of higher input lag. Higher is faster, with more input lag."
+        
+        self.update_time_slider.valueChanged.connect(self.update)
+        self.update_time_slider_label = QLabel(f"Update Time: {self.update_time_slider.value()}")
+        
+        layout.addRow(layout.addRow("Update Time:", self.update_time_slider), self.update_time_slider_label)
 
         # Clean Cache
         self.clean_cache_button = QPushButton("Clear Cache")
@@ -232,7 +237,10 @@ class ConfigDialog(QDialog):
         layout.addRow(button_layout)
         main_layout.addLayout(layout)
         self.setLayout(main_layout)    
-        
+
+    def update(self, value):
+        self.update_time_slider_label.setText(f'Update Time: {value}')    
+
     def save_settings(self):
         updated_settings = {
             'fullScreen': "yes" if self.fullscreen_checkbox.isChecked() else "no",

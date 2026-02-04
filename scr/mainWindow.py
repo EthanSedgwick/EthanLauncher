@@ -4,7 +4,8 @@ import json
 import sys
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QMessageBox, QLabel, QFileDialog,
-    QPushButton, QTreeWidget, QTreeWidgetItem, QTreeWidgetItemIterator
+    QPushButton, QTreeWidget, QTreeWidgetItem, QTreeWidgetItemIterator,
+    QToolButton, QStyle, QSizePolicy,
 )
 from PyQt6.QtCore import Qt
 import subprocess
@@ -88,58 +89,120 @@ class GameLauncher(QWidget):
         self.mod_tree.setHeaderLabels(['Mods'])
         self.mod_tree.setDragDropMode(QTreeWidget.DragDropMode.InternalMove)
         self.mod_tree.itemChanged.connect(self.on_item_changed)
+
+        # Top bar with mod-folder + refresh icons
+        top_bar = QHBoxLayout()
+        top_bar.setContentsMargins(0, 0, 0, 0)
+        top_bar.setSpacing(4)
+
+        icon_button_style = """
+        QToolButton {
+            background-color: #444444;
+            color: #ffffff;
+            border: 1px solid #666666;
+            border-radius: 3px;
+            padding: 4px 6px;
+        }
+        QToolButton:hover {
+            background-color: #555555;
+        }
+        QToolButton:pressed {
+            background-color: #333333;
+        }
+        """
+
+        # Open mod folder button (left)
+        self.open_mod_folder_button = QPushButton("Open Mods Folder")
+        self.open_mod_folder_button.setToolTip("Open mod directory")
+        self.open_mod_folder_button.clicked.connect(self.open_mod_folder)
+        self.open_mod_folder_button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        top_bar.addWidget(self.open_mod_folder_button)
+
+        # Refresh button (right)
+        self.refresh_mods_button = QPushButton("Refresh")
+        self.refresh_mods_button.setToolTip("Refresh mods list")
+        self.refresh_mods_button.clicked.connect(self.refresh_mods)
+        self.refresh_mods_button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        top_bar.addWidget(self.refresh_mods_button)
+        layout.addLayout(top_bar)
+
         layout.addWidget(self.mod_tree)
 
         # Buttons
         buttons_layout = QHBoxLayout()
-        buttons_layout.addStretch()
+
 
         # Start button
         self.start_button = QPushButton('Start Game')
         self.start_button.clicked.connect(self.start_game)
-        self.start_button.setFixedSize(100, 30)
+        self.start_button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         buttons_layout.addWidget(self.start_button)
 
         # Preset manager button
         self.preset_manager_button = QPushButton('Manage Pre-Sets')
         self.preset_manager_button.clicked.connect(self.preset_manager)
-        self.preset_manager_button.setFixedSize(150, 30)
+        self.preset_manager_button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         buttons_layout.addWidget(self.preset_manager_button)
 
         # Configuration button to open config dialog
         self.config_button = QPushButton('Settings')
         self.config_button.clicked.connect(self.open_config_dialog)
-        self.config_button.setFixedSize(100, 30)
+        self.config_button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         buttons_layout.addWidget(self.config_button)
 
         layout.addLayout(buttons_layout)
 
         buttons_layout2 = QHBoxLayout()
-        buttons_layout2.addStretch()
 
         # Check for Updates button
         self.update_button = QPushButton('Check for Updates')
-        self.update_button.setFixedSize(150, 30)
+        self.update_button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.update_button.clicked.connect(self.check_for_updates)
         buttons_layout2.addWidget(self.update_button)
 
         # About button
         self.about_button = QPushButton('About')
         self.about_button.clicked.connect(self.open_about_dialog)
-        self.about_button.setFixedSize(100, 30)
+        self.about_button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         buttons_layout2.addWidget(self.about_button)
 
         # Quit button
         self.quit_button = QPushButton('Quit')
-        self.quit_button.setFixedSize(100, 30)
+        self.quit_button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.quit_button.clicked.connect(self.close)
         buttons_layout2.addWidget(self.quit_button)
 
-        buttons_layout2.addStretch()
+#        buttons_layout2.addStretch()
 
         layout.addLayout(buttons_layout2)
 
         self.setLayout(layout)
+
+    def refresh_mods(self):
+        """Re-scan the mod folder and refresh metadata, preserving checked mods when possible."""
+        try:
+            checked = self.get_checked_mods()
+        except Exception:
+            checked = []
+
+        self.load_mods()
+
+        try:
+            self.set_checked_mods(checked)
+        except Exception:
+            pass
+
+    def open_mod_folder(self):
+        """Open the Victoria 2 mod directory in the system file explorer."""
+        try:
+            mod_folder = os.path.join(self.game_root, "mod")
+            if not os.path.isdir(mod_folder):
+                QMessageBox.warning(self, "Mod folder not found", f"Could not find mod folder:\n{mod_folder}")
+                return
+            # On Windows, os.startfile will open Explorer
+            os.startfile(mod_folder)
+        except Exception as e:
+            QMessageBox.warning(self, "Error", f"Failed to open mod folder: {e}")
 
     def set_checked_mods(self, checked_mods):
         """Set the checked state of mods in the tree based on the provided list."""
@@ -179,16 +242,15 @@ class GameLauncher(QWidget):
         try:
             about_dialog = QDialog(self)
             about_dialog.setWindowTitle("About TGLauncher")
-            about_dialog.setFixedSize(300, 200)
 
             main_layout = QVBoxLayout(about_dialog)
 
             about_text = QLabel(
-                "<h3 style='text-align: center;'>The Greater Launcher</h3>"
-                "<p style='text-align: center;'>Developed by the TGC Modding Team.</p>"
-                "<p style='text-align: center;'>v1.2.1</p>"
+                "<h3 style='text-align: center;'>The Ethan Launcher</h3>"
+                "<p style='text-align: center;'>A fork of The Greater Launcher originally created by The TGC Modding Team. This is the premiere Vic2 MP Launcher.</p>"
+                "<p style='text-align: center;'>v1.0.0</p>"
                 "<p style='text-align: center;'><a href='https://github.com/The-Grand-Combination/TGLauncher'>GitHub Repository</a><br>"
-                "<a href='https://discord.gg/the-grand-combination-689466155978588176'>Join us on Discord</a></p>"
+                "<a href='https://discord.gg/the-grand-combination-689466155978588176'>Support TGC for the original project by joining their Discord</a></p>"
             )
             about_text.setTextFormat(Qt.TextFormat.RichText)
             about_text.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
@@ -237,6 +299,20 @@ class GameLauncher(QWidget):
         self.mod_dependencies.clear()
         self.mod_user_dirs = {}
 
+        def _parse_mod_kv(line: str) -> tuple[str, str] | None:
+            # Supports formats like: key="value" or key = "value"
+            s = (line or "").strip()
+            if not s or s.startswith("#") or s.startswith("//"):
+                return None
+            if "=" not in s:
+                return None
+            key, value = s.split("=", 1)
+            key = key.strip()
+            value = value.strip()
+            if value.startswith('"') and value.endswith('"') and len(value) >= 2:
+                value = value[1:-1]
+            return key, value
+
         for file in os.listdir(mod_folder):
             if file.endswith(".mod"):
                 try:
@@ -248,17 +324,22 @@ class GameLauncher(QWidget):
                         github = ""
                         version = ""
                         for line in content.split('\n'):
-                            if line.startswith("name"):
-                                name = line.split("=")[1].strip().strip('"')
-                            elif line.startswith("dependencies"):
-                                deps_str = line.split("=")[1].strip().strip("{}")
+                            parsed = _parse_mod_kv(line)
+                            if not parsed:
+                                continue
+                            key, value = parsed
+
+                            if key == "name":
+                                name = value
+                            elif key == "dependencies":
+                                deps_str = value.strip().strip("{}")
                                 dependencies = [dep.strip().strip('"') for dep in deps_str.split(",") if dep.strip()]
-                            elif line.startswith("user_dir"):
-                                user_dir = line.split("=")[1].strip().strip('"')
-                            elif line.startswith("github"):
-                                github = line.split("=")[1].strip().strip('"')
-                            elif line.startswith("version"):
-                                version = line.split("=")[1].strip().strip('"')
+                            elif key == "user_dir":
+                                user_dir = value
+                            elif key == "github":
+                                github = value
+                            elif key == "version":
+                                version = value
 
                         if name:
                             self.mod_files[name] = {

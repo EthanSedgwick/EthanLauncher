@@ -23,7 +23,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='The Greater Launcher',
+    name='The Ethan Launcher',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -53,13 +53,10 @@ exe = EXE(
                 [
                     StringTable(
                         u'040904B0',
-                        [StringStruct(u'CompanyName', u'TGC Modding Team'),
-                         StringStruct(u'FileDescription', u'The Greater Launcher'),
-                         StringStruct(u'FileVersion', u'1.2.1'),
-                         StringStruct(u'InternalName', u'TGLauncher'),
-                         StringStruct(u'OriginalFilename', u'The Greater Launcher.exe'),
-                         StringStruct(u'ProductName', u'The Greater Launcher'),
-                         StringStruct(u'ProductVersion', u'1.2.1')])
+                        [StringStruct(u'FileDescription', u'The Ethan Launcher'),
+                         StringStruct(u'InternalName', u'EthanLauncher'),
+                         StringStruct(u'OriginalFilename', u'The Ethan Launcher.exe'),
+                         StringStruct(u'ProductName', u'The Ethan Launcher')])
                 ]
             ),
         ]
