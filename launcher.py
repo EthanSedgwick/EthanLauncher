@@ -1,11 +1,10 @@
+import os
 import sys
-from PyQt6.QtWidgets import (
-    QApplication
-)
 
+from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import QIcon
 
-from scr.mainWindow import *
+from scr.mainWindow import GameLauncher
 
 def apply_dark_theme(app):
     dark_style = """
@@ -38,7 +37,8 @@ def apply_dark_theme(app):
     }
     """
     app.setStyleSheet(dark_style)
-    app.setWindowIcon(QIcon("../scr/icon.ico"))
+    _app_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+    app.setWindowIcon(QIcon(os.path.join(_app_dir, "scr", "icon.ico")))
 
       
 if __name__ == '__main__':
